@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>VulnScan Lite Dashboard</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Custom Vanilla CSS -->
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --text-color: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --border-color: #334155;
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+    body { background-color: var(--bg-color); color: var(--text-color); line-height: 1.6; }
+    
+    .container { max-width: 1000px; margin: 0 auto; padding: 2rem; }
+    
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+    .header h1 { font-weight: 700; background: linear-gradient(to right, #3b82f6, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .header-actions { display: flex; gap: 1rem; align-items: center; }
+    .header-actions a { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; }
+    .header-actions a:hover { color: var(--text-color); }
+    
+    .card {
+      background-color: var(--card-bg); border-radius: 12px; padding: 2rem;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 2rem; border: 1px solid var(--border-color);
+    }
+
+    input[type="text"] {
+      width: 100%; padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);
+      background-color: #0f172a; color: white; font-size: 1rem; margin-bottom: 1rem;
+    }
+    input[type="text"]:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(59,130,246,0.5); }
+    
+    button {
+      background-color: var(--primary); color: white; border: none; padding: 1rem 2rem;
+      border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s;
+    }
+    button:hover { background-color: var(--primary-hover); }
+    button:disabled { background-color: var(--text-muted); cursor: not-allowed; }
+
+    .grid { display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; }
+    @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+    
+    .list-item { padding: 1rem; border-bottom: 1px solid var(--border-color); display: flex; align-items: flex-start; gap: 1rem; }
+    .list-item:last-child { border-bottom: none; }
+    .icon { font-size: 1.25rem; margin-top: 2px; }
+    .icon-pass { color: var(--success); }
+    .icon-fail { color: var(--danger); }
+    
+    .remediation-box {
+      margin-top: 0.5rem; padding: 0.75rem; background-color: rgba(239, 68, 68, 0.1);
+      border-left: 4px solid var(--danger); border-radius: 4px; font-size: 0.9rem;
+    }
+
+    .tabs { display: flex; border-bottom: 1px solid var(--border-color); margin-bottom: 1.5rem; }
+    .tab { padding: 0.75rem 1.5rem; cursor: pointer; color: var(--text-muted); border-bottom: 2px solid transparent; font-weight: 500; }
+    .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .tab:hover:not(.active) { color: var(--text-color); }
+
+    /* History Table */
+    .table { width: 100%; border-collapse: collapse; }
+    .table th, .table td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color); }
+    .table th { color: var(--text-muted); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; }
+    .table tr:hover { background-color: rgba(255,255,255,0.02); }
+    
+    .badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.85rem; font-weight: 600; }
+    .badge-A { background: rgba(16,185,129,0.1); color: var(--success); }
+    .badge-B { background: rgba(59,130,246,0.1); color: #3b82f6; }
+    .badge-C { background: rgba(245,158,11,0.1); color: var(--warning); }
+    .badge-D, .badge-F { background: rgba(239,68,68,0.1); color: var(--danger); }
+    
+    /* Gauge Chart */
+    .gauge-wrapper { position: relative; width: 200px; height: 120px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
+    .gauge-svg { width: 100%; height: 100%; overflow: visible; }
+    .gauge-bg { fill: none; stroke: var(--border-color); stroke-width: 15; stroke-linecap: round; }
+    .gauge-fill { fill: none; stroke-width: 15; stroke-linecap: round; transition: stroke-dashoffset 1s ease-out; }
+    .gauge-center { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); text-align: center; }
+    .gauge-center h2 { font-size: 3rem; margin: 0; line-height: 1; }
+    .gauge-center span { font-size: 1rem; color: var(--text-muted); }
+    
+    @media print {
+      body { background: white; color: black; }
+      .card { box-shadow: none; border: 1px solid #ccc; background: white; }
+      button, .tabs, .header-actions { display: none; }
+      .header h1 { background: none; color: black; -webkit-text-fill-color: initial; }
+    }
+  </style>
+  
+  <!-- React & Babel -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    {% raw %}
+    const { useState, useEffect } = React;
+
+    // A beautiful SVG half-circle Gauge chart
+    function GaugeChart({ score, grade }) {
+      // Circle radius 80, so half circumference is Math.PI * 80 ≈ 251.2
+      const radius = 80;
+      const circumference = Math.PI * radius;
+      // score is 0-100, we map it to dashoffset
+      const fillPercentage = score / 100;
+      const dashoffset = circumference * (1 - fillPercentage);
+
+      let color = 'var(--success)';
+      if (['B', 'B+', 'B-'].includes(grade)) color = '#3b82f6';
+      else if (['C', 'C+', 'C-'].includes(grade)) color = 'var(--warning)';
+      else if (['D', 'D+', 'D-', 'F'].includes(grade)) color = 'var(--danger)';
+
+      return (
+        <div className="gauge-wrapper">
+          <svg className="gauge-svg" viewBox="0 0 200 120">
+            <path className="gauge-bg" d="M20 100 A 80 80 0 0 1 180 100" />
+            <path 
+              className="gauge-fill" 
+              d="M20 100 A 80 80 0 0 1 180 100" 
+              style={{ 
+                stroke: color, 
+                strokeDasharray: circumference, 
+                strokeDashoffset: dashoffset 
+              }} 
+            />
+          </svg>
+          <div className="gauge-center">
+            <h2 style={{color}}>{grade}</h2>
+            <span>{score}/100</span>
+          </div>
+        </div>
+      );
+    }
+
+    function ReportCard({ report }) {
+      return (
+        <div className="card">
+          <div className="header">
+            <h2>Security Health Report</h2>
+            <button onClick={() => window.print()} style={{padding: '0.5rem 1rem', fontSize: '0.9rem'}}>Export PDF</button>
+          </div>
+
+          <div className="grid">
+            <div style={{textAlign: 'center'}}>
+              <GaugeChart score={report.score} grade={report.grade} />
+              <div style={{marginTop: '2rem', color: 'var(--text-muted)', wordBreak: 'break-all'}}>
+                <strong>Target:</strong> {report.url}
+              </div>
+            </div>
+
+            <div>
+              <h3>Issues Found</h3>
+              {report.issues && report.issues.length > 0 ? (
+                <div style={{marginTop: '1rem'}}>
+                  {report.issues.map((issue, idx) => {
+                    const remediation = report.remediation?.find(r => r.issue === issue);
+                    return (
+                      <div key={idx} className="list-item">
+                        <span className="icon icon-fail">✗</span>
+                        <div>
+                          <div style={{fontWeight: 500, color: (issue.toLowerCase().includes('not found') || issue.toLowerCase().includes('not founded')) ? 'var(--danger)' : 'inherit'}}>
+                            {issue}
+                          </div>
+                          {remediation && (
+                            <div className="remediation-box">
+                              <strong>How to Fix:</strong> {remediation.tip}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div style={{marginTop: '1rem', color: 'var(--success)'}}>No critical issues found!</div>
+              )}
+
+              <h3 style={{marginTop: '2rem'}}>Passed Checks</h3>
+              {report.passed_checks && report.passed_checks.length > 0 ? (
+                <div style={{marginTop: '1rem'}}>
+                  {report.passed_checks.map((check, idx) => (
+                    <div key={idx} className="list-item">
+                      <span className="icon icon-pass">✓</span>
+                      <div>{check}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{marginTop: '1rem', color: 'var(--text-muted)'}}>No checks passed.</div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function HistoryView() {
+      const [history, setHistory] = useState([]);
+      const [loading, setLoading] = useState(true);
+
+      useEffect(() => {
+        fetch('/api/history')
+          .then(res => res.json())
+          .then(data => {
+            setHistory(data);
+            setLoading(false);
+          })
+          .catch(err => {
+            console.error(err);
+            setLoading(false);
+          });
+      }, []);
+
+      if (loading) return <div>Loading history...</div>;
+      if (history.length === 0) return <div style={{color: 'var(--text-muted)'}}>No scans found yet.</div>;
+
+      return (
+        <div className="card">
+          <h2>Scan History</h2>
+          <div style={{overflowX: 'auto', marginTop: '1.5rem'}}>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Target URL</th>
+                  <th>Score</th>
+                  <th>Grade</th>
+                </tr>
+              </thead>
+              <tbody>
+                {history.map((scan, i) => {
+                  const date = new Date(scan.timestamp).toLocaleString();
+                  const badgeClass = `badge badge-${scan.grade.replace(/[^A-F]/g, '')}`;
+                  return (
+                    <tr key={i}>
+                      <td>{date}</td>
+                      <td>{scan.url}</td>
+                      <td>{scan.score}/100</td>
+                      <td><span className={badgeClass}>{scan.grade}</span></td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
+
+    function App() {
+      const [activeTab, setActiveTab] = useState('scanner'); // 'scanner' or 'history'
+      const [url, setUrl] = useState('');
+      const [loading, setLoading] = useState(false);
+      const [statusText, setStatusText] = useState('');
+      const [report, setReport] = useState(null);
+      const [error, setError] = useState(null);
+
+      const startScan = async (e) => {
+        e.preventDefault();
+        if (!url) return;
+        setLoading(true);
+        setError(null);
+        setReport(null);
+        setStatusText('Initializing scan...');
+        
+        try {
+          const res = await fetch('/api/scan', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url })
+          });
+          if (res.status === 429) throw new Error('Rate limit exceeded. Please wait a moment.');
+          if (!res.ok) throw new Error('Failed to start scan.');
+          
+          const data = await res.json();
+          setStatusText('Scan in progress...');
+          pollStatus(data.task_id);
+        } catch (err) {
+          setError(err.message);
+          setLoading(false);
+        }
+      };
+
+      const pollStatus = (taskId) => {
+        const interval = setInterval(async () => {
+          try {
+            const res = await fetch(`/api/scan/${taskId}/status`);
+            const data = await res.json();
+            if (data.state === 'SUCCESS') {
+              clearInterval(interval);
+              setReport(data.result);
+              setLoading(false);
+            } else if (data.state === 'FAILURE') {
+              clearInterval(interval);
+              setError('Scan failed during execution.');
+              setLoading(false);
+            } else {
+              setStatusText(`Status: ${data.state}...`);
+            }
+          } catch (err) {
+            clearInterval(interval);
+            setError('Error polling status');
+            setLoading(false);
+          }
+        }, 2000);
+      };
+
+      return (
+        <div className="container">
+          <div className="header">
+            <h1>VulnScan Lite</h1>
+            <div className="header-actions">
+              <span>Welcome, Operator</span>
+            </div>
+          </div>
+
+          <div className="tabs">
+            <div 
+              className={`tab ${activeTab === 'scanner' ? 'active' : ''}`}
+              onClick={() => setActiveTab('scanner')}
+            >
+              New Scan
+            </div>
+            <div 
+              className={`tab ${activeTab === 'history' ? 'active' : ''}`}
+              onClick={() => setActiveTab('history')}
+            >
+              Scan History
+            </div>
+          </div>
+
+          {activeTab === 'scanner' && (
+            <>
+              <div style={{
+                background: 'rgba(245, 158, 11, 0.1)',
+                border: '1px solid rgba(245, 158, 11, 0.2)',
+                color: 'var(--warning)',
+                padding: '1rem',
+                borderRadius: '8px',
+                marginBottom: '1.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                fontFamily: "'Share Tech Mono', monospace",
+                fontSize: '0.9rem'
+              }}>
+                <span style={{fontSize: '1.25rem'}}>⚠</span>
+                <span><strong>Disclaimer:</strong> Only scan websites you own. This tool performs passive analysis only.</span>
+              </div>
+              
+              <div className="card">
+                <form onSubmit={startScan} style={{display: 'flex', gap: '1rem', alignItems: 'center'}}>
+                  <input 
+                    type="text" 
+                    placeholder="https://example.com" 
+                    value={url} 
+                    onChange={(e) => setUrl(e.target.value)}
+                    disabled={loading}
+                    style={{marginBottom: 0}}
+                  />
+                  <button type="submit" disabled={loading || !url}>
+                    {loading ? 'Scanning...' : 'Scan Target'}
+                  </button>
+                </form>
+                {loading && <div style={{marginTop: '1rem', color: 'var(--primary)'}}>{statusText}</div>}
+                {error && <div style={{marginTop: '1rem', color: 'var(--danger)'}}>{error}</div>}
+              </div>
+              {report && <ReportCard report={report} />}
+            </>
+          )}
+
+          {activeTab === 'history' && <HistoryView />}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+    {% endraw %}
+  </script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Web Security Scanner</title>
+    <script>
+        async function startScan(event) {
+            event.preventDefault();
+            const url = document.getElementById("url").value;
+
+            // Trigger scan
+            let response = await fetch("/api/scan", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({url: url})
+            });
+            let data = await response.json();
+            let taskId = data.task_id;
+
+            document.getElementById("result").innerHTML = "Scan started... Task ID: " + taskId;
+
+            // Poll status every 2 seconds
+            let interval = setInterval(async () => {
+                let statusResponse = await fetch(`/api/scan/${taskId}/status`);
+                let statusData = await statusResponse.json();
+
+                if (statusData.state === "SUCCESS") {
+                    clearInterval(interval);
+                    document.getElementById("result").innerHTML =
+                        `<h3>Scan Report</h3>
+                         <p>Score: ${statusData.result.score}</p>
+                         <p>Grade: ${statusData.result.grade}</p>
+                         <ul>${statusData.result.issues.map(i => `<li>${i}</li>`).join("")}</ul>`;
+                }
+            }, 2000);
+        }
+    </script>
+</head>
+<body>
+    <h1>Web Security Scanner</h1>
+    <form onsubmit="startScan(event)">
+        <input type="text" id="url" placeholder="Enter website URL" required>
+        <button type="submit">Start Scan</button>
+    </form>
+    <div id="result"></div>
+</body>
+</html>

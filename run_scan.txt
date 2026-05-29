@@ -1,0 +1,142 @@
+@celery.task
+def run_scan(url):
+    issues = []
+    score = 100
+
+    # Header checks
+    try:
+        response = requests.get(url, timeout=5)
+        headers = response.headers
+        if "Strict-Transport-Security" not in headers:
+            issues.append("Missing HSTS"); score -= 10
+        if "Content-Security-Policy" not in headers:
+            issues.append("Missing CSP"); score -= 10
+        if "X-Frame-Options" not in headers:
+            issues.append("Missing X-Frame-Options"); score -= 10
+    except Exception as e:
+        issues.append(f"Header check failed: {str(e)}"); score -= 20
+
+    # SSL check
+    try:
+        hostname = url.replace("http://", "").replace("https://", "").split("/")[0]
+        ctx = ssl.create_default_context()
+        with ctx.wrap_socket(socket.socket(), server_hostname=hostname) as s:
+            s.connect((hostname, 443))
+            cert = s.getpeercert()
+            if not cert:
+                issues.append("No SSL certificate found"); score -= 20
+    except Exception as e:
+        issues.append(f"SSL check failed: {str(e)}"); score -= 20
+
+    # CMS detection
+    try:
+        html = response.text
+        soup = BeautifulSoup(html, "html.parser")
+        generator = soup.find("meta", {"name": "generator"})
+        if generator:
+            cms = generator["content"]
+            issues.append(f"CMS detected: {cms}")
+        else:
+            issues.append("CMS not detected")
+    except Exception as e:
+        issues.append(f"CMS check failed: {str(e)}")
+
+    # Grade
+    grade = "A"
+    if score < 90: grade = "B"
+    if score < 70: grade = "C"
+    if score < 50: grade = "D"
+
+    return {"url": url, "score": score, "grade": grade, "issues": issues}
+@celery.task(name="app.run_scan")
+def run_scan(url):
+    issues = []
+    score = 100
+
+    # Header check
+    try:
+        response = requests.get(url, timeout=5)
+        if "Content-Security-Policy" not in response.headers:
+            issues.append("Missing CSP header")
+            score -= 20
+    except Exception as e:
+        issues.append(f"Header check failed: {str(e)}")
+        score -= 10
+
+    return {"url": url, "score": score, "grade": "A", "issues": issues}
+@celery.task(name="app.run_scan")
+def run_scan(url):
+    return {
+        "url": url,
+        "score": 100,
+        "grade": "A",
+        "issues": ["Dummy test: pipeline works"]
+    }
+import requests
+
+try:
+    response = requests.get(url, timeout=5)
+    if "Content-Security-Policy" not in response.headers:
+        issues.append("Missing CSP header")
+        score -= 20
+except Exception as e:
+    issues.append(f"Header check failed: {str(e)}")
+    score -= 10
+import ssl, socket
+
+try:
+    hostname = url.replace("https://", "").split("/")[0]
+    ctx = ssl.create_default_context()
+    with socket.create_connection((hostname, 443)) as sock:
+        with ctx.wrap_socket(sock, server_hostname=hostname) as ssock:
+            cert = ssock.getpeercert()
+            issues.append("SSL certificate retrieved successfully")
+except Exception as e:
+    issues.append(f"SSL check failed: {str(e)}")
+    score -= 10
+
+import requests
+
+@celery.task(name="run_scan")
+def run_scan(url, user_id):
+    issues = []
+    score = 100
+    grade = "A"
+
+    try:
+        response = requests.get(url, timeout=5)
+        headers = response.headers
+
+        # Example check: X-Frame-Options
+        if "X-Frame-Options" not in headers:
+            issues.append("Missing header: X-Frame-Options")
+            score -= 10
+            grade = "B"
+
+        # Example check: Content-Security-Policy
+        if "Content-Security-Policy" not in headers:
+            issues.append("Missing header: Content-Security-Policy")
+            score -= 10
+            grade = "B"
+
+    except Exception as e:
+        issues.append(f"Error scanning site: {e}")
+        score = 0
+        grade = "F"
+
+    # Save to DB
+    with app.app_context():
+        task_id = run_scan.request.id
+        scan = ScanResult(
+            task_id=task_id,
+            url=url,
+            score=score,
+            grade=grade,
+            issues="; ".join(issues),
+            user_id=user_id
+        )
+        db.session.add(scan)
+        db.session.commit()
+
+    return {"url": url, "score": score, "grade": grade, "issues": issues}
+

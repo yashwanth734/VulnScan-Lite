@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VulnScan Lite — Access Terminal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    /* ============= RESET ============= */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ============= ANIMATED BACKGROUND ============= */
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Rajdhani', sans-serif;
+      background: #0a0a0f;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Animated grid floor */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0;
+      width: 200%; height: 200%;
+      background:
+        linear-gradient(90deg, rgba(0,255,200,0.03) 1px, transparent 1px),
+        linear-gradient(rgba(0,255,200,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      animation: gridMove 20s linear infinite;
+      z-index: 0;
+    }
+
+    @keyframes gridMove {
+      0% { transform: translate(-30px, -30px) perspective(500px) rotateX(15deg); }
+      100% { transform: translate(30px, 30px) perspective(500px) rotateX(15deg); }
+    }
+
+    /* Floating particles */
+    .particles {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .particle {
+      position: absolute;
+      width: 3px; height: 3px;
+      background: #00ffc8;
+      border-radius: 50%;
+      box-shadow: 0 0 6px #00ffc8, 0 0 12px #00ffc8;
+      animation: float linear infinite;
+      opacity: 0;
+    }
+
+    @keyframes float {
+      0%   { transform: translateY(100vh) scale(0); opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: 1; }
+      100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+    }
+
+    /* Glowing orbs in background */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      z-index: 0;
+      animation: orbPulse 6s ease-in-out infinite alternate;
+    }
+
+    .orb-1 {
+      width: 300px; height: 300px;
+      background: rgba(0, 255, 200, 0.15);
+      top: 10%; left: 10%;
+    }
+
+    .orb-2 {
+      width: 250px; height: 250px;
+      background: rgba(120, 0, 255, 0.12);
+      bottom: 10%; right: 15%;
+      animation-delay: 3s;
+    }
+
+    .orb-3 {
+      width: 200px; height: 200px;
+      background: rgba(0, 120, 255, 0.10);
+      top: 50%; right: 30%;
+      animation-delay: 1.5s;
+    }
+
+    @keyframes orbPulse {
+      0% { transform: scale(1); opacity: 0.5; }
+      100% { transform: scale(1.3); opacity: 0.8; }
+    }
+
+    /* ============= CARD ============= */
+    .auth-container {
+      position: relative;
+      z-index: 10;
+      width: 440px;
+      max-width: 95vw;
+      animation: cardEntry 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      opacity: 0;
+    }
+
+    @keyframes cardEntry {
+      from { opacity: 0; transform: translateY(40px) scale(0.95); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .auth-card {
+      background: rgba(15, 15, 25, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(0, 255, 200, 0.15);
+      border-radius: 16px;
+      padding: 3rem 2.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Animated border glow */
+    .auth-card::before {
+      content: '';
+      position: absolute;
+      top: -2px; left: -2px; right: -2px; bottom: -2px;
+      border-radius: 18px;
+      background: conic-gradient(
+        from 0deg,
+        transparent,
+        #00ffc8,
+        transparent,
+        #7c3aed,
+        transparent,
+        #00ffc8,
+        transparent
+      );
+      z-index: -1;
+      animation: borderSpin 4s linear infinite;
+      opacity: 0.4;
+    }
+
+    @keyframes borderSpin {
+      0%   { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .auth-card::after {
+      content: '';
+      position: absolute;
+      top: 1px; left: 1px; right: 1px; bottom: 1px;
+      background: rgba(15, 15, 25, 0.95);
+      border-radius: 15px;
+      z-index: -1;
+    }
+
+    /* Top accent line */
+    .accent-line {
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #00ffc8, #7c3aed, transparent);
+      border-radius: 2px;
+      margin-bottom: 2rem;
+      animation: linePulse 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes linePulse {
+      0% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    /* ============= LOGO / ICON ============= */
+    .logo-area {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .shield-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 1rem;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .shield-icon svg {
+      width: 54px;
+      height: 54px;
+      filter: drop-shadow(0 0 12px rgba(0, 255, 200, 0.6));
+      animation: shieldPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes shieldPulse {
+      0%, 100% { filter: drop-shadow(0 0 12px rgba(0, 255, 200, 0.4)); transform: scale(1); }
+      50%      { filter: drop-shadow(0 0 24px rgba(0, 255, 200, 0.8)); transform: scale(1.05); }
+    }
+
+    .logo-title {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 800;
+      font-size: 1.6rem;
+      letter-spacing: 3px;
+      background: linear-gradient(135deg, #00ffc8, #7c3aed);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-transform: uppercase;
+    }
+
+    .logo-subtitle {
+      font-family: 'Share Tech Mono', monospace;
+      color: rgba(0, 255, 200, 0.5);
+      font-size: 0.75rem;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    /* ============= FORM TITLE ============= */
+    .form-title {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: #fff;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .form-title .blink {
+      animation: blink 1s steps(1) infinite;
+      color: #00ffc8;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    /* ============= INPUTS ============= */
+    .input-group {
+      position: relative;
+      margin-bottom: 1.25rem;
+    }
+
+    .input-group .input-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(0, 255, 200, 0.5);
+      font-size: 0.9rem;
+      pointer-events: none;
+      transition: color 0.3s;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 14px 16px 14px 44px;
+      background: rgba(0, 255, 200, 0.04);
+      border: 1px solid rgba(0, 255, 200, 0.15);
+      border-radius: 10px;
+      color: #e2e8f0;
+      font-size: 1rem;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      transition: all 0.3s ease;
+      outline: none;
+    }
+
+    .input-group input::placeholder {
+      color: rgba(148, 163, 184, 0.5);
+      font-weight: 400;
+    }
+
+    .input-group input:focus {
+      border-color: #00ffc8;
+      background: rgba(0, 255, 200, 0.07);
+      box-shadow: 0 0 0 3px rgba(0, 255, 200, 0.08), 0 0 20px rgba(0, 255, 200, 0.08);
+    }
+
+    .input-group input:focus + .input-icon,
+    .input-group input:focus ~ .input-icon {
+      color: #00ffc8;
+    }
+
+    /* ============= SUBMIT BUTTON ============= */
+    .submit-btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #0a0a0f;
+      background: linear-gradient(135deg, #00ffc8, #00d9a7);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      margin-top: 0.5rem;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0, 255, 200, 0.35);
+    }
+
+    .submit-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Shine sweep on hover */
+    .submit-btn::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+      transition: left 0.5s;
+    }
+
+    .submit-btn:hover::after {
+      left: 100%;
+    }
+
+    /* ============= TOGGLE LINK ============= */
+    .toggle-area {
+      text-align: center;
+      margin-top: 1.5rem;
+    }
+
+    .toggle-link {
+      font-family: 'Share Tech Mono', monospace;
+      color: rgba(0, 255, 200, 0.5);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: color 0.3s;
+      text-decoration: none;
+      letter-spacing: 1px;
+    }
+
+    .toggle-link:hover {
+      color: #00ffc8;
+      text-shadow: 0 0 10px rgba(0, 255, 200, 0.5);
+    }
+
+    .toggle-link .arrow {
+      display: inline-block;
+      transition: transform 0.3s;
+    }
+
+    .toggle-link:hover .arrow {
+      transform: translateX(4px);
+    }
+
+    /* ============= SIGNUP EXTRA FIELD ============= */
+    .signup-extra {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s;
+      opacity: 0;
+    }
+
+    .signup-extra.show {
+      max-height: 80px;
+      opacity: 1;
+    }
+
+    /* ============= DISCLAIMER ============= */
+    .disclaimer {
+      text-align: center;
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(0, 255, 200, 0.08);
+    }
+
+    .disclaimer p {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.65rem;
+      color: rgba(148, 163, 184, 0.4);
+      letter-spacing: 1px;
+      line-height: 1.5;
+    }
+
+    /* ============= CORNER DECORATIONS ============= */
+    .corner {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      z-index: 5;
+    }
+
+    .corner::before, .corner::after {
+      content: '';
+      position: absolute;
+      background: #00ffc8;
+      opacity: 0.5;
+    }
+
+    .corner-tl { top: 12px; left: 12px; }
+    .corner-tl::before { top: 0; left: 0; width: 16px; height: 2px; }
+    .corner-tl::after  { top: 0; left: 0; width: 2px;  height: 16px; }
+
+    .corner-tr { top: 12px; right: 12px; }
+    .corner-tr::before { top: 0; right: 0; width: 16px; height: 2px; }
+    .corner-tr::after  { top: 0; right: 0; width: 2px;  height: 16px; }
+
+    .corner-bl { bottom: 12px; left: 12px; }
+    .corner-bl::before { bottom: 0; left: 0; width: 16px; height: 2px; }
+    .corner-bl::after  { bottom: 0; left: 0; width: 2px;  height: 16px; }
+
+    .corner-br { bottom: 12px; right: 12px; }
+    .corner-br::before { bottom: 0; right: 0; width: 16px; height: 2px; }
+    .corner-br::after  { bottom: 0; right: 0; width: 2px;  height: 16px; }
+
+    /* ============= SCAN LINES OVERLAY ============= */
+    .scanlines {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 999;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.03) 2px,
+        rgba(0, 0, 0, 0.03) 4px
+      );
+    }
+
+    /* ============= ALERT MESSAGES ============= */
+    .alert {
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.8rem;
+      margin-bottom: 1rem;
+      letter-spacing: 0.5px;
+    }
+
+    .alert-danger {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171;
+    }
+
+    .alert-success {
+      background: rgba(0, 255, 200, 0.1);
+      border: 1px solid rgba(0, 255, 200, 0.3);
+      color: #00ffc8;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background effects -->
+  <div class="scanlines"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+  <div class="particles" id="particles"></div>
+
+  <!-- Auth Card -->
+  <div class="auth-container">
+    <div class="auth-card">
+      <!-- Corner decorations -->
+      <div class="corner corner-tl"></div>
+      <div class="corner corner-tr"></div>
+      <div class="corner corner-bl"></div>
+      <div class="corner corner-br"></div>
+
+      <!-- Accent line -->
+      <div class="accent-line"></div>
+
+      <!-- Logo -->
+      <div class="logo-area">
+        <div class="shield-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L3 7V12C3 17.55 6.84 22.74 12 24C17.16 22.74 21 17.55 21 12V7L12 2Z" 
+                  fill="rgba(0,255,200,0.1)" stroke="#00ffc8" stroke-width="1.5"/>
+            <path d="M10 15.5L7.5 13L8.91 11.59L10 12.67L14.59 8.08L16 9.5L10 15.5Z" 
+                  fill="#00ffc8"/>
+          </svg>
+        </div>
+        <div class="logo-title">VulnScan</div>
+        <div class="logo-subtitle">Security Terminal</div>
+      </div>
+
+      <!-- Form Title -->
+      <h3 class="form-title" id="form-title">
+        <span id="title-text">Login</span><span class="blink">_</span>
+      </h3>
+
+      <!-- Flash Messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, msg in messages %}
+            <div class="alert alert-{{ category }}" role="alert">{{ msg }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <!-- Form -->
+      <form method="POST" action="{{ url_for('auth') }}" id="auth-form" novalidate>
+        <input type="hidden" name="action" id="form-action" value="login" />
+        <div class="input-group">
+          <input type="text" name="username" placeholder="Enter username" required />
+          <span class="input-icon">⌘</span>
+        </div>
+
+        <div class="input-group">
+          <input type="password" name="password" placeholder="Enter password" required />
+          <span class="input-icon">🔒</span>
+        </div>
+
+        <div class="signup-extra" id="signup-extra">
+          <div class="input-group">
+            <input id="confirm-password" type="password" name="confirm_password" placeholder="Confirm password" />
+            <span class="input-icon">🔑</span>
+          </div>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submit-btn">
+          Initialize
+        </button>
+      </form>
+
+      <!-- Toggle -->
+      <div class="toggle-area" id="toggle-area">
+        <span class="toggle-link" id="toggle-text" onclick="setMode('signup')">
+          New agent? Create account <span class="arrow">→</span>
+        </span>
+        <div style="margin-top: 8px;">
+          <span class="toggle-link" id="forgot-text" style="font-size: 0.75rem;" onclick="setMode('forgot')">
+            System override (Forgot Password)
+          </span>
+        </div>
+      </div>
+
+      <!-- Disclaimer -->
+      <div class="disclaimer">
+        <p>⚠ Only scan websites you own. This tool performs passive analysis only.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============= FORM MODE =============
+    let currentMode = 'login'; // login, signup, forgot
+
+    function setMode(mode) {
+      currentMode = mode;
+      const titleEl = document.getElementById('title-text');
+      const btnEl   = document.getElementById('submit-btn');
+      const extraEl = document.getElementById('signup-extra');
+      const toggleEl = document.getElementById('toggle-text');
+      const forgotEl = document.getElementById('forgot-text');
+      const confirmInput = document.getElementById('confirm-password');
+      const actionInput = document.getElementById('form-action');
+      const pwInput = document.querySelector('input[name="password"]');
+
+      actionInput.value = mode;
+
+      if (mode === 'login') {
+        titleEl.textContent = 'Login';
+        btnEl.textContent   = 'Initialize';
+        extraEl.classList.remove('show');
+        confirmInput.removeAttribute('required');
+        confirmInput.value = '';
+        pwInput.placeholder = 'Enter password';
+        toggleEl.innerHTML = 'New agent? Create account <span class="arrow">→</span>';
+        toggleEl.onclick = () => setMode('signup');
+        forgotEl.style.display = 'inline-block';
+      } else if (mode === 'signup') {
+        titleEl.textContent = 'Sign Up';
+        btnEl.textContent   = 'Register';
+        extraEl.classList.add('show');
+        confirmInput.setAttribute('required', 'required');
+        pwInput.placeholder = 'Enter password';
+        toggleEl.innerHTML = 'Returning agent? Login <span class="arrow">→</span>';
+        toggleEl.onclick = () => setMode('login');
+        forgotEl.style.display = 'none';
+      } else if (mode === 'forgot') {
+        titleEl.textContent = 'Reset';
+        btnEl.textContent   = 'Update Password';
+        extraEl.classList.add('show');
+        confirmInput.setAttribute('required', 'required');
+        pwInput.placeholder = 'Enter new password';
+        toggleEl.innerHTML = 'Remembered? Login <span class="arrow">→</span>';
+        toggleEl.onclick = () => setMode('login');
+        forgotEl.style.display = 'none';
+      }
+    }
+
+    // ============= CLIENT VALIDATION =============
+    document.getElementById('auth-form').addEventListener('submit', function (e) {
+      if (currentMode !== 'login') {
+        const pw  = this.querySelector('input[name="password"]').value;
+        const cpw = this.querySelector('input[name="confirm_password"]').value;
+        if (!pw || !cpw) {
+          e.preventDefault();
+          alert('Please fill both password fields.');
+          return;
+        }
+        if (pw !== cpw) {
+          e.preventDefault();
+          alert('Passwords do not match.');
+          return;
+        }
+      }
+    });
+
+    // ============= FLOATING PARTICLES =============
+    (function createParticles() {
+      const container = document.getElementById('particles');
+      for (let i = 0; i < 30; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.left = Math.random() * 100 + '%';
+        p.style.animationDuration = (4 + Math.random() * 8) + 's';
+        p.style.animationDelay = (Math.random() * 10) + 's';
+        p.style.width  = (2 + Math.random() * 3) + 'px';
+        p.style.height = p.style.width;
+        container.appendChild(p);
+      }
+    })();
+  </script>
+
+</body>
+</html>
